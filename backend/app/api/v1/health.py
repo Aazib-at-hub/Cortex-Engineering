@@ -41,10 +41,11 @@ async def health_check(db: AsyncSession = Depends(get_db)) -> HealthResponse:
     """Check application health and database connectivity."""
     settings = get_settings()
 
-    # Verify database connectivity
+    # Verify database connectivity with 2 second timeout
     db_status = "healthy"
     try:
-        await db.execute(text("SELECT 1"))
+        import asyncio
+        await asyncio.wait_for(db.execute(text("SELECT 1")), timeout=2.0)
     except Exception:
         db_status = "unhealthy"
 
