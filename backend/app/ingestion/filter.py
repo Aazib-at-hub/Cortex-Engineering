@@ -148,10 +148,11 @@ def should_index_file(
     if filename in IGNORED_FILENAMES:
         return False, f"Filename '{filename}' is ignored"
 
-    # Check file suffix
+    # Check file suffix and compound suffixes (e.g. .min.js)
     suffix = relative_path.suffix.lower()
-    if suffix in IGNORED_EXTENSIONS:
-        return False, f"Extension '{suffix}' is ignored"
+    name_lower = relative_path.name.lower()
+    if suffix in IGNORED_EXTENSIONS or any(name_lower.endswith(ext) for ext in IGNORED_EXTENSIONS):
+        return False, f"Extension or file pattern is ignored"
 
     # Check file size limit
     if file_size_bytes > max_file_size_bytes:
