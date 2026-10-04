@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Cpu, Github, LogIn, LogOut, RefreshCw, Terminal, User as UserIcon } from "lucide-react";
+import { Cpu, GitFork, LogIn, LogOut, RefreshCw, Terminal, User as UserIcon } from "lucide-react";
 import { useAuthStore } from "../lib/store/auth";
 import { healthApi } from "../lib/api/client";
 import type { HealthResponse } from "../lib/api/types";
@@ -81,7 +81,7 @@ export function Navbar({ onOpenAuth, onOpenImport }: NavbarProps) {
               onClick={onOpenImport}
               className="flex items-center gap-2 rounded-lg bg-indigo-600 px-3.5 py-1.5 text-xs font-semibold text-white shadow-sm hover:bg-indigo-500 transition active:scale-95"
             >
-              <Github className="h-3.5 w-3.5" />
+              <GitFork className="h-3.5 w-3.5" />
               <span>Import Repo</span>
             </button>
           )}
