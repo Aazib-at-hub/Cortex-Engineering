@@ -60,17 +60,39 @@ async function request<T>(
     headers["Authorization"] = `Bearer ${token}`;
   }
 
-  const response = await fetch(url, {
-    ...options,
-    headers,
-  });
+  let response: Response;
+  try {
+    response = await fetch(url, {
+      ...options,
+      headers,
+    });
+  } catch (err: unknown) {
+    const errorMsg =
+      err instanceof Error
+        ? err.message
+        : "Failed to connect to backend server. Make sure FastAPI is running on http://localhost:8000.";
+    throw new ApiError(503, {
+      code: "NETWORK_ERROR",
+      message: errorMsg,
+      details: null,
+    });
+  }
 
   // Handle no-content responses
   if (response.status === 204) {
     return undefined as T;
   }
 
-  const data = await response.json();
+  let data: any;
+  try {
+    data = await response.json();
+  } catch {
+    throw new ApiError(response.status, {
+      code: "PARSE_ERROR",
+      message: `Server returned status ${response.status} with non-JSON response.`,
+      details: null,
+    });
+  }
 
   if (!response.ok) {
     const apiError = data as APIError;

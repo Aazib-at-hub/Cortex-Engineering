@@ -64,11 +64,19 @@ export function Navbar({ onOpenAuth, onOpenImport }: NavbarProps) {
           >
             <span
               className={`h-2 w-2 rounded-full ${
-                health?.status === "healthy" ? "bg-emerald-400 animate-pulse" : "bg-red-400"
+                health?.status === "healthy"
+                  ? "bg-emerald-400"
+                  : health?.status === "degraded"
+                  ? "bg-amber-400 animate-pulse"
+                  : "bg-red-400"
               }`}
             />
             <span className="hidden sm:inline font-mono">
-              {health ? "System Online" : "Offline"}
+              {health?.status === "healthy"
+                ? "System Online"
+                : health?.status === "degraded"
+                ? `DB ${health.database}`
+                : "Offline"}
             </span>
             <RefreshCw
               className={`h-3 w-3 text-text-tertiary ${isHealthLoading ? "animate-spin" : ""}`}
