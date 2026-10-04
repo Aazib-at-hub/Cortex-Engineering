@@ -1,0 +1,73 @@
+# =============================================================================
+# Cortex Engineering — Docker Compose
+# =============================================================================
+# Usage:
+#   docker compose up -d          # Start all services
+#   docker compose up -d --build  # Rebuild and start
+#   docker compose logs -f        # Follow logs
+#   docker compose down -v        # Stop and remove volumes
+# =============================================================================
+
+services:
+  # ── PostgreSQL + pgvector ──────────────────────────────────────────────
+  db:
+    image: pgvector/pgvector:pg16
+    container_name: cortex-db
+    environment:
+      POSTGRES_USER: cortex
+      POSTGRES_PASSWORD: cortex
+      POSTGRES_DB: cortex
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U cortex -d cortex"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # ── Backend (FastAPI) ──────────────────────────────────────────────────
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: cortex-backend
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: postgresql+asyncpg://cortex:cortex@db:5432/cortex
+      DATABASE_URL_SYNC: postgresql://cortex:cortex@db:5432/cortex
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - ./backend:/app
+      - backend-repos:/app/repos
+    healthcheck:
+      test: ["CMD", "python", "-c", "import httpx; httpx.get('http://localhost:8000/api/v1/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+  # ── Frontend (Next.js) ─────────────────────────────────────────────────
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: cortex-frontend
+    ports:
+      - "3000:3000"
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost:8000
+    depends_on:
+      - backend
+
+volumes:
+  pgdata:
+    driver: local
+  backend-repos:
+    driver: local
